@@ -4,14 +4,14 @@
     "version": "1.0",
     "description": "Automatically and perpetually pin certain tabs.",
     "background": {
-        "service_worker": "background.js"
+        "service_worker": "scripts/background.js"
     },
     "permissions": [ 
         "tabs",
         "storage"
     ],
     "action": {
-        "default_popup": "popup.html",
+        "default_popup": "html/popup.html",
         "default_icon": {
             "16": "images/icon-16.png",
             "32": "images/icon-32.png",
