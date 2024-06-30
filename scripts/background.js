@@ -39,11 +39,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function pinStartupTabs() {
     chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
         result.perpetuallyPinnedUrls.forEach((url) => {
-            chrome.tabs.query({url: url}, (tabs) => {
-                if (tabs.length === 0) {
-                    chrome.tabs.create({url: url, pinned: true})
-                }
-            })
+            chrome.tabs.create({url: url, pinned: true}, (tab) => {
+                console.log("Tab created.")
+            });
         });
     });
 }
