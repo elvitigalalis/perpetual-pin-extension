@@ -1,0 +1,10 @@
+{
+    "manifest_version": 3,
+    "name": "Perpetually Pin Tabs",
+    "version": "1.0",
+    "description": "Automatically and perpetually pin certain tabs.",
+    "action": {
+      "default_popup": "hello.html",
+      "default_icon": "hello.png"
+    }
+  }
