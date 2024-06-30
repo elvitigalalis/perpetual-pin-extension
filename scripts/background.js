@@ -17,12 +17,17 @@ chrome.windows.onCreated.addListener(() => {
 
 // FIXME- if tab is already pinned, it will delete the new tab and navigate to the pinned tab.
 chrome.tabs.onCreated.addListener((tab) => {
-    chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
-        if (result.perpetuallyPinnedUrls.includes(tab.url)) {
-            chrome.tabs.update(tab.id, {pinned: true})
-        }
-    });
+    if (tab.url) {
+        console.log("tab.url: " + tab.url);
+        pinTab(tab);
+    }
+    else {
+        chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+            console.log("dd.url: " + tab.url);
+         }); 
+    }
 });
+// DID NOT WORK ABOVE
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "addPerpetuallyPinnedUrl") {
@@ -41,6 +46,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse({status: "success"});
             });
         });
+        return true;
     }
 })
 
@@ -53,6 +59,15 @@ function pinStartupTabs() {
                     console.log("Tab created.")
                 });
             });
+        }
+    });
+}
+
+function pinTab(tab) {
+    chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
+        console.log(tab.url);
+        if (result.perpetuallyPinnedUrls.includes(tab.url)) {
+            chrome.tabs.update(tab.id, {pinned: true})
         }
     });
 }
