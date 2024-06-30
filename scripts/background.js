@@ -29,9 +29,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
             const newUrls = [...result.perpetuallyPinnedUrls, request.url];
             chrome.storage.sync.set({perpetuallyPinnedUrls: newUrls }, () => {
-                sendResponse({ status: "success" })
+                sendResponse({ status: "success" });
             });
         });
+        return true;
     }
 })
 
