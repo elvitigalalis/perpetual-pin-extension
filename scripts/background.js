@@ -5,5 +5,21 @@ chrome.runtime.onInstalled.addListener(() => {
                 console.log("Perpetually pinned tab list is initialized, but null.")
             })
         }
+    });
+
+    pinStartupTabs();
+    // Pins all wanted tabs on startup / window creation.
+})
+
+chrome.windows.onCreated.addListener(() => {
+    pinStartupTabs();
+})
+
+// FIXME- if tab is already pinned, it will delete the new tab and navigate to the pinned tab.
+chrome.tabs.onCreated.addListener((tab) => {
+    chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
+        if (result.perpetuallyPinnedUrls.includes(tab.url)) {
+            chrome.tabs.update(tab.id, {pinned: true})
+        }
     })
 })
