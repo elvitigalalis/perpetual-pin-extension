@@ -38,10 +38,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // If a tab in perpetuallyPinnedUrls is not open, it will open it and pin it.
 function pinStartupTabs() {
     chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
-        result.perpetuallyPinnedUrls.forEach((url) => {
-            chrome.tabs.create({url: url, pinned: true}, (tab) => {
-                console.log("Tab created.")
+        if (result.perpetuallyPinnedUrls) {
+            result.perpetuallyPinnedUrls.forEach((url) => {
+                chrome.tabs.create({url: url, pinned: true}, (tab) => {
+                    console.log("Tab created.")
+                });
             });
-        });
+        }
     });
 }
