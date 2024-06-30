@@ -34,6 +34,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
         return true;
     }
+    else if (request.action === "deletePerpetuallyPinnedUrl") {
+        chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
+            const newUrls = result.perpetuallyPinnedUrls.filter((url) => url !== request.url);
+            chrome.storage.sync.set({perpetuallyPinnedUrls: newUrls }, () => {
+                sendResponse({status: "success"});
+            });
+        });
+    }
 })
 
 // If a tab in perpetuallyPinnedUrls is not open, it will open it and pin it.
