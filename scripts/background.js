@@ -23,3 +23,16 @@ chrome.tabs.onCreated.addListener((tab) => {
         }
     })
 })
+
+// If a tab in perpetuallyPinnedUrls is not open, it will open it and pin it.
+function pinStartupTabs() {
+    chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
+        result.perpetuallyPinnedUrls.forEach((url) => {
+            chrome.tabs.query({url: url}, (tabs) => {
+                if (tabs.length === 0) {
+                    chrome.tabs.create({url: url, pinned: true})
+                }
+            })
+        })
+    })
+}
