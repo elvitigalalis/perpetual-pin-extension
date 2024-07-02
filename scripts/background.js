@@ -60,6 +60,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 })
 
+setInterval(checkAndPinTabs, 5000);
+
 // If a tab in perpetuallyPinnedUrls is not open, it will open it and pin it.
 function pinStartupTabs() {
     chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
