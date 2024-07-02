@@ -32,6 +32,7 @@ chrome.tabs.onCreated.addListener((tab) => {
         chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, newTab) {
             console.log("New tab URL " + newTab.url);
             if (newTab.url !== "chrome://newtab/") {
+
                 perpetuallyPinSpecificTab(newTab);
             }
          }); 
@@ -78,8 +79,10 @@ function pinStartupTabs() {
 function checkAndPinTabs() {
     chrome.storage.sync.get(["perpetuallyPinnedUrls"], 
     (result) => {
-        return;
-    })
+        if (!result.perpetuallyPinnedUrls) {
+            return
+        }
+    });
 
     chrome.tabs.query({ currentWindow: true }, function(tabs) {
         const strippedPinUrls = result.perpetuallyPinnedUrls.map((url) => stripUrl(url));
