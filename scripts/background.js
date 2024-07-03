@@ -7,12 +7,12 @@ chrome.runtime.onInstalled.addListener(() => {
         }
     });
 
-    pinStartupTabs();
+    autoPinNotPinnedTabsAndDeleteDuplicateTabs();
 });
 
-// chrome.windows.onCreated.addListener(() => {
-//     pinStartupTabs();
-// });
+chrome.windows.onCreated.addListener(() => {
+    autoPinNotPinnedTabsAndDeleteDuplicateTabs();
+});
 
 /*
 The above two snippets of code pin tabs specified 
@@ -29,13 +29,14 @@ chrome.tabs.onCreated.addListener((tab) => {
         const strippedPerpetuallyPinnedUrls = result.perpetuallyPinnedUrls.map((url) => stripUrl(url));
 
         if (tab.url && strippedPerpetuallyPinnedUrls.includes(stripUrl(tab.url))) {
-            perpetuallyPinSpecificTab(tab);
+            navigateToPinnedTab(tab);
         } else {
             console.log("New tab initialized without URL");
-            chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, newTab) {
+            chrome.tabs.onUpdated.addListener(function onTabUpdate(tabId, changeInfo, newTab) {
                 console.log("New tab URL: " + newTab.url);
                 if (tabId === tab.id && changeInfo.url && strippedPerpetuallyPinnedUrls.includes(stripUrl(changeInfo.url))) {
-                    perpetuallyPinSpecificTab(newTab);
+                    navigateToPinnedTab(newTab);
+                    chrome.tabs.onUpdated.removeListener(onTabUpdate);
                 }
             }); 
         }
@@ -63,29 +64,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 })
 
-setInterval(checkAndPinTabs, 1000);
+setInterval(autoPinNotPinnedTabsAndDeleteDuplicateTabs, 1000);
 
-// If a tab in perpetuallyPinnedUrls is not open, it will open it and pin it.
-function pinStartupTabs() {
-    chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
-        if (result.perpetuallyPinnedUrls) {
-            result.perpetuallyPinnedUrls.forEach((url) => {
-                chrome.tabs.create({url: url, pinned: true}, (tab) => {
-                    console.log("Tab created.")
-                });
-            });
-        }
-    });
-}
+// function pinStartupTabs() {
+//     chrome.storage.sync.get(["perpetuallyPinnedUrls"], (result) => {
+//         if (result.perpetuallyPinnedUrls) {
+//             result.perpetuallyPinnedUrls.forEach((url) => {
+//                 chrome.tabs.create({url: url, pinned: true}, (tab) => {
+//                     console.log("Tab created.")
+//                 });
+//             });
+//         }
+//     });
+// }
 
-function checkAndPinTabs() {
+function autoPinNotPinnedTabsAndDeleteDuplicateTabs() {
     chrome.storage.sync.get(["perpetuallyPinnedUrls"], 
     (result) => {
         if (!result.perpetuallyPinnedUrls) {
             return
         }
     
-
         chrome.tabs.query({ currentWindow: true }, function(tabs) {
             const strippedPinUrls = result.perpetuallyPinnedUrls.map((url) => stripUrl(url));
             // const strippedCurrentUrls = tabs.map(tab => stripUrl(tab.url));
@@ -106,28 +105,41 @@ function checkAndPinTabs() {
             strippedPinUrls.forEach((url) => {
                 if (!seenUrls.has(url)) {
                     const originalUrl = result.perpetuallyPinnedUrls.find(originalUrl => stripUrl(originalUrl) === url);
-                    chrome.tabs.create({url: originalUrl, pinned: true});
+                    chrome.tabs.create({url: originalUrl, pinned: true, active: false});
                 }
             })
         })
     });
 }
 
-function perpetuallyPinSpecificTab(targetTab) {
-    chrome.storage.sync.get(["perpetuallyPinnedUrls"], 
-    (result) => {
-        const strippedTabUrl = stripUrl(targetTab.url);
-        console.log("Stripped URL: " + strippedTabUrl);
+function navigateToPinnedTab(newTab) {
+    chrome.tabs.query({ currentWindow: true, pinned: true }, (tabs) => {
+        const strippedNewTabUrl = stripUrl(newTab.url);
+        const existingPinnedTab = tabs.find(tab => stripUrl(tab.url) === strippedNewTabUrl);
 
-        const isTabPinned = result.perpetuallyPinnedUrls.includes(strippedTabUrl);
-        console.log("Is tab pinned: " + isTabPinned);
-
-        if (true) {
-            chrome.tabs.update(targetTab.id, {pinned: true});
-            console.log("Tab has been pinned.");
+        if (existingPinnedTab) {
+            chrome.tabs.update(existingPinnedTab.id, { url: newTab.url, active:true }, () => {
+                chrome.tabs.remove(newTab.id);
+            })
         }
-    });
+    })
 }
+
+// function perpetuallyPinASpecificTab(targetTab) {
+//     chrome.storage.sync.get(["perpetuallyPinnedUrls"], 
+//     (result) => {
+//         const strippedTabUrl = stripUrl(targetTab.url);
+//         console.log("Stripped URL: " + strippedTabUrl);
+
+//         const isTabPinned = result.perpetuallyPinnedUrls.includes(strippedTabUrl);
+//         console.log("Is tab pinned: " + isTabPinned);
+
+//         if (true) {
+//             chrome.tabs.update(targetTab.id, {pinned: true});
+//             console.log("Tab has been pinned.");
+//         }
+//     });
+// }
 
 function stripUrl(url) {
     return url.replace(/^(https?:\/\/)?(www\.)?|\/$/g, '');
